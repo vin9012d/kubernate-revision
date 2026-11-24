@@ -1,0 +1,12 @@
+# ClusterIP Service = reachable ONLY from inside the cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: ClusterIP        # this is the default; step 02's Service was also ClusterIP
+  selector:
+    app: backend
+  ports:
+    - port: 8080         # clients call   backend:8080
+      targetPort: 80     # Service sends  -> pod:80   (where the app really listens)

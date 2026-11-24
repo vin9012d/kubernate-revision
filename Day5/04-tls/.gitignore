@@ -1,0 +1,3 @@
+# generated in README step 1 - never commit private keys
+*.key
+*.crt

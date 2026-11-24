@@ -1,0 +1,27 @@
+# =====================================================================
+#  FRONTEND on CLOUD               Service type: LoadBalancer
+# ---------------------------------------------------------------------
+#  Story: in production (EKS) we don't give users "node-ip:30080".
+#  We want ONE public address on port 80 -> LoadBalancer.
+#  K8s asks AWS: "create a load balancer and send its traffic to my nodes".
+#    EKS : EXTERNAL-IP = abc123.elb.ap-south-1.amazonaws.com
+#    kind: EXTERNAL-IP = <pending> forever (no cloud) - still works as NodePort
+#  Same selector as the NodePort service -> both point to the SAME frontend pods.
+# =====================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-public
+  namespace: shop
+  # annotations:                                          # on EKS, extra cloud settings go here, e.g.
+  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+  #   service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  type: LoadBalancer
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80                      # port on the cloud load balancer (users hit http://<lb-dns>/)
+      targetPort: http
+      # nodePort not set -> K8s auto-picks one (e.g. 31xxx). LB -> node:31xxx -> pod:80

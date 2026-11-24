@@ -1,0 +1,81 @@
+# =====================================================================
+#  FRONTEND (website)            Service type: NodePort
+# ---------------------------------------------------------------------
+#  Story: the website users open in the browser. Must be reachable from
+#  OUTSIDE the cluster -> NodePort opens port 30080 on every node.
+#  nginx acts as a reverse proxy and shows Service-to-Service calls:
+#     /          -> answered by frontend itself
+#     /api/      -> forwarded to  orders-api:8080        (ClusterIP service)
+#     /pay/      -> forwarded to  payment-gateway        (ExternalName service)
+# =====================================================================
+apiVersion: v1
+kind: ConfigMap                     # (ConfigMap = config file stored in K8s; own topic later)
+metadata:
+  name: frontend-nginx-conf
+  namespace: shop
+data:
+  default.conf: |
+    server {
+      listen 80;
+      default_type text/plain;
+
+      location = / {
+        return 200 "Hello from FRONTEND pod: $hostname\n";
+      }
+
+      # Frontend -> backend, using the Service NAME (not a pod IP!)
+      location /api/ {
+        proxy_pass http://orders-api:8080/;
+      }
+
+      # Frontend -> external payment provider, via ExternalName Service
+      location /pay/ {
+        proxy_pass http://payment-gateway/;
+        proxy_set_header Host httpbin.org;   # external site expects ITS hostname, not "payment-gateway"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: shop
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: conf
+              mountPath: /etc/nginx/conf.d   # replace nginx default site with our config
+      volumes:
+        - name: conf
+          configMap:
+            name: frontend-nginx-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: shop
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 80                      # inside cluster:   frontend:80  (NodePort ALSO gets a ClusterIP)
+      targetPort: http              # pod port:         80
+      nodePort: 30080               # outside cluster:  <any-node-IP>:30080   (range 30000-32767)

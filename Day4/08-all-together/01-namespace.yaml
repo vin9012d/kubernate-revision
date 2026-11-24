@@ -1,0 +1,6 @@
+# A namespace = a folder inside the cluster. Everything for our shop app lives here.
+# Service DNS names include the namespace: <service>.<namespace>.svc.cluster.local
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shop

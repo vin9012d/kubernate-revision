@@ -1,0 +1,48 @@
+# =====================================================================
+#  REDIS (database/cache)        Service type: Headless (clusterIP: None)
+# ---------------------------------------------------------------------
+#  Story: a database with 2 pods: redis-0 (primary) and redis-1 (replica).
+#  Writes MUST go to redis-0 specifically -> we can't use a load-balanced IP
+#  that randomly picks a pod. We need a STABLE DNS NAME PER POD:
+#     redis-0.redis.shop.svc.cluster.local
+#     redis-1.redis.shop.svc.cluster.local
+#  A headless Service + StatefulSet gives exactly that.
+#  (StatefulSet = like Deployment but pods get fixed names 0,1,2... - own topic later)
+# =====================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: shop
+spec:
+  clusterIP: None                   # <- HEADLESS: no virtual IP, no load balancing.
+                                    #    DNS "redis" returns ALL pod IPs; "redis-0.redis" returns ONE pod IP
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: shop
+spec:
+  serviceName: redis                # <- link to the headless Service above (creates per-pod DNS)
+  replicas: 2
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        tier: database
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.4-alpine
+          ports:
+            - containerPort: 6379

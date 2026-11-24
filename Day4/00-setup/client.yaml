@@ -1,0 +1,12 @@
+# A tiny "client" pod that just sleeps.
+# We use it to run commands (wget, nslookup) from INSIDE the cluster:
+#   kubectl exec client -- wget -qO- http://<something>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+spec:
+  containers:
+    - name: client
+      image: busybox:1.36
+      command: ["sleep", "infinity"]

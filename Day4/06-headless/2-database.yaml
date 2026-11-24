@@ -1,0 +1,49 @@
+# A database with 2 pods that are NOT the same:
+#   db-0 = PRIMARY  -> accepts writes
+#   db-1 = REPLICA  -> copies everything from db-0, READ ONLY (rejects writes)
+#
+# Two objects in this file:
+#   1. Headless Service "db"  -> gives each pod its own DNS name: db-0.db , db-1.db
+#   2. StatefulSet "db"       -> creates pods with FIXED names db-0, db-1
+#                                (a Deployment would give random names like db-7f9c-x2k)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  clusterIP: None                # <-- HEADLESS: no Service IP, no random load balancing
+  selector:
+    app: db
+  ports:
+    - port: 6379
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db                # <-- use the headless Service above for per-pod DNS names
+  replicas: 2
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.4-alpine
+          ports:
+            - containerPort: 6379
+          command: ["sh", "-c"]
+          args:
+            - |
+              if [ "$(hostname)" = "db-0" ]; then
+                echo "I am db-0 -> PRIMARY"
+                exec redis-server
+              else
+                echo "I am $(hostname) -> REPLICA of db-0.db"
+                exec redis-server --replicaof db-0.db 6379   # finds primary by its headless DNS name
+              fi

@@ -1,0 +1,12 @@
+# Our "app". It just sleeps; we use it to run redis-cli commands
+# as if our application was talking to the database.
+#   kubectl exec app -- redis-cli -h <host> SET order:1 pizza
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  containers:
+    - name: app
+      image: redis:7.4-alpine      # contains redis-cli (and nslookup)
+      command: ["sleep", "infinity"]

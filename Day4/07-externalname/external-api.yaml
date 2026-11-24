@@ -1,0 +1,10 @@
+# ExternalName = a nickname for a website OUTSIDE the cluster.
+# Pods call http://external-api  ->  DNS says "that's really httpbin.org"
+# No pods, no selector, no ports. Only a DNS alias (CNAME).
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-api
+spec:
+  type: ExternalName
+  externalName: httpbin.org

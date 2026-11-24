@@ -1,0 +1,13 @@
+# A NORMAL Service (ClusterIP) in front of the SAME 2 database pods.
+# It picks a RANDOM pod for every connection -> sometimes db-0, sometimes db-1.
+# This is the WRONG choice for this database - we create it to SEE the problem.
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-normal
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 6379
+      targetPort: 6379

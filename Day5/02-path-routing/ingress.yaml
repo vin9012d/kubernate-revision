@@ -1,0 +1,26 @@
+# ONE entry point, routing by URL PATH:
+#   http://localhost/orders...  -> orders Service
+#   http://localhost/...        -> frontend Service (everything else)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shop-paths
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /orders           # /orders, /orders/, /orders/123 ...
+            pathType: Prefix
+            backend:
+              service:
+                name: orders
+                port:
+                  number: 80
+          - path: /                 # everything else
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

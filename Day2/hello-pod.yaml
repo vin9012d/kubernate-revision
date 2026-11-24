@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-pod
+  labels:
+    app: hello
+spec:
+  restartPolicy: Never          # run once, don't restart after exit
+  containers:
+    - name: hello
+      image: busybox:1.36       # tiny image from Docker Hub
+      command: ["sh", "-c", "echo 'Hello World from Kubernetes!'"]

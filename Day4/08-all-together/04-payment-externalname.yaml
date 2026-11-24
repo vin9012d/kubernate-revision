@@ -1,0 +1,17 @@
+# =====================================================================
+#  PAYMENT GATEWAY (3rd-party, OUTSIDE the cluster)   Service type: ExternalName
+# ---------------------------------------------------------------------
+#  Story: we use an external payment provider. Today it's "httpbin.org"
+#  (pretend it's Stripe/Razorpay). Our apps call http://payment-gateway
+#  and never hard-code the real hostname.
+#  Tomorrow we switch provider (or sandbox -> prod)? Change ONLY this file.
+#  No pods, no selector, no IP. Cluster DNS just answers: CNAME httpbin.org
+# =====================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-gateway
+  namespace: shop
+spec:
+  type: ExternalName
+  externalName: httpbin.org         # must be a DNS name (not an IP)

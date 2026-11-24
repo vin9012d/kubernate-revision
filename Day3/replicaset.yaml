@@ -1,0 +1,28 @@
+apiVersion: apps/v1               # ReplicaSet lives in "apps" API group (not core v1 like Pod)
+kind: ReplicaSet
+metadata:
+  name: whoami-rs
+  labels:
+    app: whoami-rs
+spec:
+  replicas: 3                     # desired number of pods - RS keeps exactly 3 running
+  selector:                       # which pods this RS "owns" / counts
+    matchLabels:
+      app: whoami-rs              # MUST match template.metadata.labels below
+  template:                       # pod blueprint - same as a Pod's metadata + spec
+    metadata:
+      labels:
+        app: whoami-rs
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami:v1.10.1   # tiny Go HTTP server, replies with pod hostname + IP
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "100m"
+              memory: "32Mi"

@@ -1,0 +1,46 @@
+# =====================================================================
+#  ORDERS API  (backend)          Service type: ClusterIP
+# ---------------------------------------------------------------------
+#  Story: our backend API. Only the frontend should talk to it.
+#  It must NOT be reachable from the internet -> ClusterIP (internal only).
+#  Frontend will call it by NAME: http://orders-api:8080
+# =====================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+  namespace: shop
+spec:
+  replicas: 3                       # 3 backend pods -> Service load-balances across them
+  selector:
+    matchLabels:
+      app: orders-api
+  template:
+    metadata:
+      labels:
+        app: orders-api             # (A) pod label ... Service selector (B) must match this
+        tier: backend
+    spec:
+      containers:
+        - name: api
+          image: traefik/whoami:v1.10.1   # Go HTTP server; prints its pod Hostname on every request
+          env:
+            - name: WHOAMI_NAME
+              value: "orders-api"
+          ports:
+            - name: http            # (C) named port. Service targetPort refers to this name
+              containerPort: 80     #     the app really listens on 80 inside the container
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api                  # <- this NAME becomes the DNS name: orders-api / orders-api.shop.svc.cluster.local
+  namespace: shop
+spec:
+  type: ClusterIP                   # default; internal-only virtual IP
+  selector:
+    app: orders-api                 # (B) "send traffic to every READY pod with label app=orders-api"
+  ports:
+    - name: http
+      port: 8080                    # clients call  orders-api:8080
+      targetPort: http              # forwarded to  <podIP>:80  (named port C)

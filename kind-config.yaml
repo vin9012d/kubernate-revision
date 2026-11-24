@@ -1,0 +1,18 @@
+# kind cluster config for this revision repo.
+# Maps ports on your Mac -> ports on the kind node (a Docker container),
+# so the browser on the Mac can reach the cluster directly.
+#
+#   kind create cluster --name k8srevision --config kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    labels:
+      ingress-ready: "true"     # Ingress controller is scheduled on this node
+    extraPortMappings:
+      - containerPort: 80       # Ingress HTTP   -> http://localhost
+        hostPort: 80
+      - containerPort: 443      # Ingress HTTPS  -> https://localhost
+        hostPort: 443
+      - containerPort: 30080    # Day 4 NodePort -> http://localhost:30080
+        hostPort: 30080

@@ -1,0 +1,30 @@
+# ONE entry point, routing by DOMAIN NAME (the "Host" the browser asks for):
+#   http://shop.local   -> shop Service
+#   http://admin.local  -> admin Service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sites
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: shop.local              # <-- NEW: match on domain name
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shop
+                port:
+                  number: 80
+    - host: admin.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: admin
+                port:
+                  number: 80

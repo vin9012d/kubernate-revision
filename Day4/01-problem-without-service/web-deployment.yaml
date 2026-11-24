@@ -1,0 +1,21 @@
+# 2 pods of a small Go web server.
+# Every response prints "Hostname: <pod-name>" so we can see WHICH pod answered.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web              # remember this label - the Service in step 02 uses it
+    spec:
+      containers:
+        - name: web
+          image: traefik/whoami:v1.10.1
+          ports:
+            - containerPort: 80

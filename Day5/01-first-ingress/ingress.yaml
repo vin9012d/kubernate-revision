@@ -1,0 +1,18 @@
+# Our first Ingress = a routing rule for the Ingress controller (nginx).
+# "Any request that comes in -> send it to Service web, port 80"
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+spec:
+  ingressClassName: nginx       # which controller should handle this rule (we installed "nginx")
+  rules:
+    - http:
+        paths:
+          - path: /             # every URL starting with "/" (= everything)
+            pathType: Prefix
+            backend:
+              service:
+                name: web       # the ClusterIP Service from app.yaml
+                port:
+                  number: 80

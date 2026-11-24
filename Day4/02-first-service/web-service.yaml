@@ -1,0 +1,11 @@
+# Our first Service. Only 3 important things:
+apiVersion: v1
+kind: Service
+metadata:
+  name: web          # 1. NAME  -> other pods can now call http://web
+spec:
+  selector:
+    app: web         # 2. WHICH PODS -> all pods with label app=web (from step 01)
+  ports:
+    - port: 80       # 3. PORTS -> call the Service on 80 ...
+      targetPort: 80 #            ... it forwards to the pod's port 80
